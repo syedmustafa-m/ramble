@@ -1,103 +1,119 @@
-import Image from "next/image";
+'use client';
+
+import { useEffect, useState } from 'react';
+import socket from '@/lib/socket';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [connected, setConnected] = useState(false);
+  const [started, setStarted] = useState(false);
+  const [messages, setMessages] = useState<string[]>([]);
+  const [input, setInput] = useState('');
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  useEffect(() => {
+    socket.on('partnerFound', () => {
+      console.log('🎉 Partner found!');
+      setConnected(true);
+      setMessages(['Partner connected']);
+    });
+
+    socket.on('message', (msg: string) => {
+      setMessages((prev) => [...prev, msg]);
+    });
+
+    socket.on('partnerLeft', () => {
+      setConnected(false);
+      setMessages((prev) => [...prev, 'Partner disconnected']);
+    });
+
+    return () => {
+      socket.off('partnerFound');
+      socket.off('message');
+      socket.off('partnerLeft');
+    };
+  }, []);
+
+  const startChat = () => {
+    socket.connect();
+    console.log('Starting chat...');
+    setStarted(true);
+  };
+
+  const stopChat = () => {
+    socket.disconnect();
+    setStarted(false);
+    setConnected(false);
+    setMessages([]);
+    console.log('Chat stopped.');
+  };
+
+  const sendMessage = () => {
+    if (input.trim()) {
+      socket.emit('message', input);
+      setMessages((prev) => [...prev, `You: ${input}`]);
+      setInput('');
+    }
+  };
+
+  return (
+    <main className="min-h-screen bg-gradient-to-tr from-purple-100 to-white p-6 flex flex-col items-center justify-start">
+      <header className="w-full flex justify-between items-center max-w-4xl mx-auto mb-6">
+        <h1 className="text-3xl font-bold text-purple-700">💬 Ramble</h1>
+        <div className="space-x-3">
+          {!started && (
+            <button
+              onClick={startChat}
+              className="px-5 py-2 bg-purple-600 text-white rounded-lg shadow-md hover:bg-purple-700 transition"
+            >
+              Start Chat
+            </button>
+          )}
+          {started && (
+            <button
+              onClick={stopChat}
+              className="px-5 py-2 bg-gray-300 text-gray-800 rounded-lg shadow-md hover:bg-gray-400 transition"
+            >
+              Stop Chat
+            </button>
+          )}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      </header>
+
+      <section className="text-center mb-10">
+        <h2 className="text-4xl font-semibold text-gray-800 mb-2">
+          Talk to strangers, instantly.
+        </h2>
+        <p className="text-gray-600">Anonymous. Real-time. Refreshing.</p>
+      </section>
+
+      {started && (
+        <>
+          <div className="w-full max-w-2xl bg-white border rounded-xl p-6 shadow-inner h-64 overflow-y-auto mb-4">
+            {messages.map((msg, idx) => (
+              <div key={idx} className="mb-1 text-gray-800">
+                {msg}
+              </div>
+            ))}
+          </div>
+
+          <div className="flex space-x-2 max-w-2xl w-full">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              className="flex-grow border rounded-lg px-4 py-2"
+              disabled={!connected}
+              placeholder={connected ? 'Type your message…' : 'Waiting for partner...'}
+            />
+            <button
+              onClick={sendMessage}
+              disabled={!connected}
+              className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition"
+            >
+              Send
+            </button>
+          </div>
+        </>
+      )}
+    </main>
   );
 }
