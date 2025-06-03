@@ -1,6 +1,8 @@
 import io from "socket.io-client";
 
-const socket = io("https://ramble-socket-server.onrender.com", {
+console.log("🌐 Connecting to:", process.env.NEXT_PUBLIC_SOCKET_URL || "../../../ramble-socket-server/socket-sever.js");
+
+const socket = io("http://192.168.18.43:3001", {
   path: "/socket.io",
   transports: ["websocket"],
   autoConnect: false,

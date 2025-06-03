@@ -10,20 +10,21 @@ export default function Home() {
   const [input, setInput] = useState('');
 
   useEffect(() => {
-    socket.on('partnerFound', () => {
-      console.log('🎉 Partner found!');
-      setConnected(true);
-      setMessages(['Partner connected']);
-    });
-
     socket.on('message', (msg: string) => {
       setMessages((prev) => [...prev, msg]);
     });
 
-    socket.on('partnerLeft', () => {
-      setConnected(false);
-      setMessages((prev) => [...prev, 'Partner disconnected']);
+    socket.on("partnerFound", () => {
+      console.log("🎉 Partner found!");
+      setConnected(true);
+      setMessages(["Partner connected"]);
     });
+
+    socket.on("partnerLeft", () => {
+      setConnected(false);
+      setMessages((prev) => [...prev, "Partner disconnected"]);
+    });
+
 
     return () => {
       socket.off('partnerFound');
@@ -68,13 +69,27 @@ export default function Home() {
             </button>
           )}
           {started && (
-            <button
-              onClick={stopChat}
-              className="px-5 py-2 bg-gray-300 text-gray-800 rounded-lg shadow-md hover:bg-gray-400 transition"
-            >
-              Stop Chat
-            </button>
+            <div className="flex space-x-3 mb-4">
+              <button
+                onClick={stopChat}
+                className="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition"
+              >
+                Stop
+              </button>
+
+              <button
+                onClick={() => {
+                  setConnected(false);
+                  setMessages([]);
+                  socket.emit("skip");
+                }}
+                className="px-4 py-2 bg-yellow-400 text-black rounded-lg hover:bg-yellow-500 transition"
+              >
+                Next
+              </button>
+            </div>
           )}
+
         </div>
       </header>
 
