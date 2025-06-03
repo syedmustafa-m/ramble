@@ -1,4 +1,4 @@
-import { io } from "socket.io-client";
+import io from "socket.io-client";
 
 const socket = io("https://ramble-socket-server.onrender.com", {
   path: "/socket.io",
