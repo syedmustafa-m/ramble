@@ -1,6 +1,6 @@
 import { io } from "socket.io-client";
 
-const socket = io("http://localhost:3001", {
+const socket = io("https://ramble-socket-server.onrender.com", {
   path: "/socket.io",
   transports: ["websocket"],
   autoConnect: false,
